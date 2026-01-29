@@ -65,6 +65,36 @@ st.plotly_chart(fig, width="stretch")
 
 
 # -------------------------------------------------
+# Valor / Quantidade por Secretaria
+# -------------------------------------------------
+total_anual_secretaria = (
+    df
+    .groupby(['ano_mes', 'secretaria'], as_index=False)
+    .agg(valor=('valor_total', 'sum'))
+)
+
+fig = px.line(
+    total_anual_secretaria,
+    x='ano_mes',
+    y=eixo_y,
+    color='secretaria',
+    markers=True,
+    title='Evolução Mensal por Secretaria (Valor Total)'
+)
+
+fig.update_layout(
+    xaxis_title='Ano-Mês',
+    yaxis_title=titulo_y,
+    legend_title_text='Secretaria',
+)
+
+st.plotly_chart(fig, width="stretch")
+
+
+
+
+
+# -------------------------------------------------
 # Valor por Litro
 # -------------------------------------------------
 fig_litro = px.line(
@@ -84,6 +114,3 @@ fig_litro.update_layout(
 st.plotly_chart(fig_litro, width="stretch")
 
 
-# -------------------------------------------------
-# Valor por Litro
-# -------------------------------------------------

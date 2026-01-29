@@ -9,7 +9,7 @@ csv_path_secretaria = base_dir / 'centro_de_custos.csv'
 def data():
 
     df = pd.read_csv(csv_path, sep=';')
-    df_secretaria = pd.read_csv(csv_path_secretaria, sep=';')
+    df_secretaria = pd.read_csv(csv_path_secretaria, sep='\t')
 
     # colunas numéricas com vírgula decimal
     colunas_float = [
