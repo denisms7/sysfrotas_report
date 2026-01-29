@@ -4,10 +4,12 @@ import pandas as pd
 
 base_dir = Path(__file__).resolve().parent
 csv_path = base_dir / 'abastecimentos__01012020.csv'
+csv_path_secretaria = base_dir / 'centro_de_custos.csv'
 
 def data():
 
     df = pd.read_csv(csv_path, sep=';')
+    df_secretaria = pd.read_csv(csv_path_secretaria, sep=';')
 
     # colunas numéricas com vírgula decimal
     colunas_float = [
@@ -44,6 +46,13 @@ def data():
     df['ano_mes'] = (
         df['ano'].astype(str) + '-' +
         df['mes'].astype(str).str.zfill(2)
+    )
+
+
+    df = df.merge(
+        df_secretaria[['centro_de_custos', 'secretaria']],
+        on='centro_de_custos',
+        how='left'
     )
 
     return df
