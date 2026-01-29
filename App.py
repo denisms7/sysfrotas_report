@@ -5,10 +5,6 @@ from data.data import data
 
 df = data()
 
-df = df[df['ano'] < 2026]
-
-ano_minimo = df['ano'].min()
-ano_maximo = df['ano'].max()
 
 # -------------------------------------------------
 # Configuração da página
@@ -20,9 +16,29 @@ st.set_page_config(
 )
 
 st.title("⛽ Combustível utilizado")
-st.subheader(f"Fonte de dados SysFrotas: {ano_minimo} a {ano_maximo}")
 
 
+# -------------------------------------------------
+# Filtrar período
+# -------------------------------------------------
+st.sidebar.subheader("🎯 Filtros", divider=True)
+
+ano_min = int(df["ano"].min())
+ano_max = int(df["ano"].max())
+
+ano_inicio, ano_fim = st.sidebar.slider(
+    "Selecione o intervalo de anos",
+    min_value=ano_min,
+    max_value=ano_max,
+    value=(ano_min, 2025),
+    step=1,
+)
+
+df = df.loc[
+    (df["ano"] >= ano_inicio) & (df["ano"] <= ano_fim)
+]
+
+st.subheader(f"Fonte de dados SysFrotas: {ano_min} a {ano_max}")
 
 
 # -------------------------------------------------
@@ -80,7 +96,7 @@ total_anual_secretaria = (
     .agg(valor=('valor_total', 'sum'))
 )
 
-fig = px.line(
+fig_secretaria = px.line(
     total_anual_secretaria,
     x='ano_mes',
     y=eixo_y,
@@ -89,14 +105,61 @@ fig = px.line(
     title='Evolução Mensal por Secretaria (Valor Total)'
 )
 
-fig.update_layout(
+fig_secretaria.update_layout(
     xaxis_title='Ano-Mês',
     yaxis_title=titulo_y,
     legend_title_text='Secretaria',
 )
 
-st.plotly_chart(fig, width="stretch")
 
+fig_secretaria_pizza = px.line(
+    total_anual_secretaria,
+    x='ano_mes',
+    y=eixo_y,
+    color='secretaria',
+    markers=True,
+    title='Evolução Mensal por Secretaria (Valor Total)'
+)
+
+fig_secretaria_pizza.update_layout(
+    xaxis_title='Ano-Mês',
+    yaxis_title=titulo_y,
+    legend_title_text='Secretaria',
+)
+
+
+st.plotly_chart(fig_secretaria, width="stretch")
+
+# -------------------------------------------------
+# Total Geral por Secretaria (Gráfico Agrupado)
+# -------------------------------------------------
+total_por_secretaria = (
+    df
+    .groupby('secretaria', as_index=False)
+    .agg(valor=('valor_total', 'sum'))
+)
+
+# Ordena pelo valor total (do maior para o menor)
+total_por_secretaria = total_por_secretaria.sort_values(
+    by='valor',
+    ascending=False
+)
+
+fig_secretaria_pizza = px.bar(
+    total_por_secretaria,
+    x='secretaria',
+    y=eixo_y,
+    text_auto='.2s',
+    title='Total Geral por Secretaria',
+    subtitle=f"Periodo: {ano_min} - {ano_max}",
+)
+
+fig_secretaria_pizza.update_layout(
+    xaxis_title='Secretaria',
+    yaxis_title=titulo_y,
+)
+
+st.plotly_chart(fig_secretaria_pizza, use_container_width=True)
 
 
 
