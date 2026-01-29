@@ -36,6 +36,9 @@ def Data():
 
     df['ano'] = df['data_hora'].dt.year
     df['mes'] = df['data_hora'].dt.month
-
+    df['ano_mes'] = (
+        df['ano'].astype(str) + '-' +
+        df['mes'].astype(str).str.zfill(2)
+    )
 
     return df
