@@ -5,6 +5,11 @@ from data.data import data
 
 df = data()
 
+df = df[df['ano'] < 2026]
+
+ano_minimo = df['ano'].min()
+ano_maximo = df['ano'].max()
+
 # -------------------------------------------------
 # Configuração da página
 # -------------------------------------------------
@@ -15,7 +20,9 @@ st.set_page_config(
 )
 
 st.title("⛽ Combustível utilizado")
-st.subheader("Fonte de dados SysFrotas")
+st.subheader(f"Fonte de dados SysFrotas: {ano_minimo} a {ano_maximo}")
+
+
 
 
 # -------------------------------------------------
