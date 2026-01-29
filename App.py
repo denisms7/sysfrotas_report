@@ -167,12 +167,11 @@ st.plotly_chart(fig_secretaria_pizza, use_container_width=True)
 # -------------------------------------------------
 # Valor por Litro
 # -------------------------------------------------
-fig_litro = px.line(
+fig_litro = px.scatter(
     df,
     x='data_hora',
     y='valor_unitario',
     color='combustivel_tipo',
-    markers=True,
     title='Valor do combustivel por unidade'
 )
 
