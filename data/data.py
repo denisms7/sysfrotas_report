@@ -1,8 +1,13 @@
+from pathlib import Path
 import pandas as pd
 
-def Data():
 
-    df = pd.read_csv('abastecimentos__01012020.csv', sep=';')
+base_dir = Path(__file__).resolve().parent
+csv_path = base_dir / 'abastecimentos__01012020.csv'
+
+def data():
+
+    df = pd.read_csv(csv_path, sep=';')
 
     # colunas numéricas com vírgula decimal
     colunas_float = [
