@@ -3,7 +3,7 @@ import pandas as pd
 
 
 base_dir = Path(__file__).resolve().parent
-csv_path = base_dir / 'abastecimentos__01012020.csv'
+csv_path = base_dir / 'Abastecimentos _01012015.csv'
 csv_path_secretaria = base_dir / 'centro_de_custos.csv'
 
 def data():
@@ -24,7 +24,10 @@ def data():
         df[col] = (
             df[col]
             .astype(str)
-            .str.replace(',', '.', regex=False)
+            .str.replace('R$', '', regex=False)
+            .str.replace('.', '', regex=False)   # remove milhar
+            .str.replace(',', '.', regex=False)  # decimal
+            .str.strip()
         )
         df[col] = pd.to_numeric(df[col], errors='coerce')
 

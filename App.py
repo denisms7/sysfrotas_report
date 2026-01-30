@@ -183,3 +183,48 @@ fig_litro.update_layout(
 st.plotly_chart(fig_litro, width="stretch")
 
 
+# -------------------------------------------------
+# Veículos por ano
+# -------------------------------------------------
+frota_evolucao = (
+    df
+    .groupby('ano', as_index=False)
+    .agg(
+        qtde_veiculos=('nome_veiculo', 'nunique'),
+        valor_total=('valor_total', 'sum')
+    )
+)
+
+# Gráfico base: quantidade de veículos
+fig_evolucao = px.line(
+    frota_evolucao,
+    x="ano",
+    y="qtde_veiculos",
+    markers=True
+)
+
+# Linha de custo (segundo eixo)
+fig_evolucao.add_scatter(
+    x=frota_evolucao['ano'],
+    y=frota_evolucao['valor_total'],
+    mode='lines+markers',
+    name='Valor Total (R$)',
+    yaxis='y2'
+)
+
+fig_evolucao.update_layout(
+    title='Veículos por Ano<br><sup>veículos únicos abastecidos durante o ano</sup>',
+    xaxis_title='Ano',
+    yaxis=dict(
+        title='Quantidade de Veículos'
+    ),
+    yaxis2=dict(
+        title='Valor Total (R$)',
+        overlaying='y',
+        side='right',
+        tickformat=',.0f'
+    ),
+    legend_title_text=''
+)
+
+st.plotly_chart(fig_evolucao, use_container_width=True)
