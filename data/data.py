@@ -58,4 +58,6 @@ def data():
         how='left'
     )
 
+    df = df[df['ano'] < 2026]
+
     return df

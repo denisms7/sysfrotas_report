@@ -65,13 +65,13 @@ opcao_diesel = st.sidebar.segmented_control(
 )
 
 opcao_gasolina = st.sidebar.segmented_control(
-    "Agrupar Gasolina e Gasolina Aditivada",
+    "Agrupar Gasolina Comum e Aditivada",
     options=["Separar", "Agrupar"],
     default="Separar",
 )
 
 
-st.sidebar.info("O Agrupamentos soma o valor total e litros dos tipos selecionados.")
+st.sidebar.info("Os Agrupamentos somam o valor total e litros dos tipos selecionados.")
 
 if opcao_diesel == "Agrupar":
     df["combustivel_tipo"] = df["combustivel_tipo"].replace(
@@ -96,12 +96,12 @@ if opcao_gasolina == "Agrupar":
 # -------------------------------------------------
 opcao_geral = st.segmented_control(
     "Visualização",
-    options=["⛽ Total Geral", "🧩 Combustivel", "📊 Quantidade"],
-    default="⛽ Total Geral",
+    options=["Total Geral", "Combustivel R$", "Combustivel Quantidade"],
+    default="Total Geral",
 )
 
 
-if opcao_geral == "⛽ Total Geral":
+if opcao_geral == "Total Geral":
     total_anual = (
         df
         .groupby(coluna_geral, as_index=False)
@@ -113,7 +113,7 @@ if opcao_geral == "⛽ Total Geral":
     cor = None
     titulo = "Evolução Mensal - Total Geral"
 
-elif opcao_geral == "🧩 Combustivel":
+elif opcao_geral == "Combustivel R$":
     total_anual = (
         df
         .groupby(["combustivel_tipo", coluna_geral], as_index=False)
@@ -125,7 +125,7 @@ elif opcao_geral == "🧩 Combustivel":
     cor = "combustivel_tipo"
     titulo = "Evolução Mensal por Combustível (R$)"
 
-else:  # 📊 Quantidade
+elif opcao_geral == "Combustivel Quantidade":
     total_anual = (
         df
         .groupby(["combustivel_tipo", coluna_geral], as_index=False)
