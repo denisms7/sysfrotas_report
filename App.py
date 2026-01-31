@@ -3,6 +3,8 @@ import pandas as pd
 import plotly.express as px
 from data.data import data
 
+st.cache_data.clear()
+
 df = data()
 
 
@@ -36,55 +38,122 @@ ano_inicio, ano_fim = st.sidebar.slider(
 
 df = df.loc[
     (df["ano"] >= ano_inicio) & (df["ano"] <= ano_fim)
-]
+].copy()  # Adicione .copy() aqui
 
 st.subheader(f"Fonte de dados SysFrotas: {ano_min} a {ano_max}")
+
+
+opcao_coluna = st.sidebar.segmented_control(
+    "Tipo de Visualização",
+    options=["Mensal", "Anual"],
+    default="Mensal",
+)
+
+if opcao_coluna == "Anual":
+    coluna_geral = "ano"
+    coluna_geral_nome = "Ano"
+else:
+    coluna_geral = "ano_mes"
+    coluna_geral_nome = "Ano-Mês"
+
+
+
+opcao_diesel = st.sidebar.segmented_control(
+    "Agrupar Diesel S-10 e S-500",
+    options=["Separar", "Agrupar"],
+    default="Separar",
+)
+
+opcao_gasolina = st.sidebar.segmented_control(
+    "Agrupar Gasolina e Gasolina Aditivada",
+    options=["Separar", "Agrupar"],
+    default="Separar",
+)
+
+
+st.sidebar.info("O Agrupamentos soma o valor total e litros dos tipos selecionados.")
+
+if opcao_diesel == "Agrupar":
+    df["combustivel_tipo"] = df["combustivel_tipo"].replace(
+        {
+            "DIESEL S-10": "DIESEL AGRUPADO",
+            "DIESEL S-500": "DIESEL AGRUPADO",
+        }
+    )
+
+if opcao_gasolina == "Agrupar":
+    df["combustivel_tipo"] = df["combustivel_tipo"].replace(
+        {
+            "GASOLINA": "GASOLINA AGRUPADA",
+            "GASOLINA ADITIVADA": "GASOLINA AGRUPADA",
+        }
+    )
+
 
 
 # -------------------------------------------------
 # Valor gasto Reais e Litros
 # -------------------------------------------------
-opcao = st.segmented_control(
+opcao_geral = st.segmented_control(
     "Visualização",
-    options=["💵 Valor Total", "⛽ Quantidade"],
-    default="💵 Valor Total",
+    options=["⛽ Total Geral", "🧩 Combustivel", "📊 Quantidade"],
+    default="⛽ Total Geral",
 )
 
 
-if opcao == "💵 Valor Total":
+if opcao_geral == "⛽ Total Geral":
     total_anual = (
         df
-        .groupby(['combustivel_tipo', 'ano_mes'], as_index=False)
-        .agg(valor=('valor_total', 'sum'))
+        .groupby(coluna_geral, as_index=False)
+        .agg(valor=("valor_total", "sum"))
     )
-    eixo_y = 'valor'
-    titulo_y = 'Valor Total (R$)'
-else:
-    total_anual = (
-        df
-        .groupby(['combustivel_tipo', 'ano_mes'], as_index=False)
-        .agg(valor=('quantidade', 'sum'))
-    )
-    eixo_y = 'valor'
-    titulo_y = 'Litros abastecidos'
 
+    eixo_y = "valor"
+    titulo_y = "Valor Total (R$)"
+    cor = None
+    titulo = "Evolução Mensal - Total Geral"
+
+elif opcao_geral == "🧩 Combustivel":
+    total_anual = (
+        df
+        .groupby(["combustivel_tipo", coluna_geral], as_index=False)
+        .agg(valor=("valor_total", "sum"))
+    )
+
+    eixo_y = "valor"
+    titulo_y = "Valor Total (R$)"
+    cor = "combustivel_tipo"
+    titulo = "Evolução Mensal por Combustível (R$)"
+
+else:  # 📊 Quantidade
+    total_anual = (
+        df
+        .groupby(["combustivel_tipo", coluna_geral], as_index=False)
+        .agg(valor=("quantidade", "sum"))
+    )
+
+    eixo_y = "valor"
+    titulo_y = "Litros abastecidos"
+    cor = "combustivel_tipo"
+    titulo = "Evolução Mensal por Combustível (Litros)"
 
 fig = px.line(
     total_anual,
-    x='ano_mes',
+    x=coluna_geral,
     y=eixo_y,
-    color='combustivel_tipo',
+    color=cor,
     markers=True,
-    title='Evolução Mensal por Combustível'
+    title=titulo,
 )
 
 fig.update_layout(
-    xaxis_title='Ano-Mês',
+    xaxis_title=coluna_geral_nome,
     yaxis_title=titulo_y,
-    legend_title_text='Combustível',
+    legend_title_text="Combustível" if cor else None,
 )
 
-st.plotly_chart(fig, width="stretch")
+st.plotly_chart(fig, use_container_width=True)
+
 
 
 # -------------------------------------------------
@@ -92,13 +161,13 @@ st.plotly_chart(fig, width="stretch")
 # -------------------------------------------------
 total_anual_secretaria = (
     df
-    .groupby(['ano_mes', 'secretaria'], as_index=False)
+    .groupby([coluna_geral, 'secretaria'], as_index=False)
     .agg(valor=('valor_total', 'sum'))
 )
 
 fig_secretaria = px.line(
     total_anual_secretaria,
-    x='ano_mes',
+    x=coluna_geral,
     y=eixo_y,
     color='secretaria',
     markers=True,
@@ -106,7 +175,7 @@ fig_secretaria = px.line(
 )
 
 fig_secretaria.update_layout(
-    xaxis_title='Ano-Mês',
+    xaxis_title=coluna_geral_nome,
     yaxis_title=titulo_y,
     legend_title_text='Secretaria',
 )
@@ -114,7 +183,7 @@ fig_secretaria.update_layout(
 
 fig_secretaria_pizza = px.line(
     total_anual_secretaria,
-    x='ano_mes',
+    x=coluna_geral,
     y=eixo_y,
     color='secretaria',
     markers=True,
@@ -122,7 +191,7 @@ fig_secretaria_pizza = px.line(
 )
 
 fig_secretaria_pizza.update_layout(
-    xaxis_title='Ano-Mês',
+    xaxis_title=coluna_geral_nome,
     yaxis_title=titulo_y,
     legend_title_text='Secretaria',
 )
