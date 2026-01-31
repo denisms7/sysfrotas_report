@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from data.data import data
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
+
 
 st.cache_data.clear()
 
@@ -322,27 +325,10 @@ frota_evolucao = (
     df
     .groupby('ano', as_index=False)
     .agg(
-        qtde_veiculos=('nome_veiculo', 'nunique'),
+        qtde_veiculos=('codigo_veiculo', 'nunique'),
         valor_total=('valor_total', 'sum')
     )
 )
-
-# Gráfico base: quantidade de veículos
-fig_evolucao = px.line(
-    frota_evolucao,
-    x="ano",
-    y="qtde_veiculos",
-    markers=True
-)
-
-fig_evolucao.update_layout(
-    title='Veículos por Ano<br><sup>veículos únicos abastecidos durante o ano</sup>',
-    xaxis_title='Ano',
-    yaxis_title='Quantidade de Veículos',
-)
-
-st.plotly_chart(fig_evolucao, use_container_width=True)
-
 
 # -------------------------------------------------
 # Veículos por ano E tipo de combustível
@@ -357,7 +343,7 @@ frota_evolucao_tipo = (
     df
     .groupby(['ano', 'combustivel'], as_index=False)
     .agg(
-        qtde_veiculos=('nome_veiculo', 'nunique'),
+        qtde_veiculos=('codigo_veiculo', 'nunique'),
         valor_total=('valor_total', 'sum')
     )
 )
@@ -370,7 +356,6 @@ if agrupar_flex == "Agrupar":
         }
     )
     
-    # Reagrupar após a substituição para consolidar as linhas
     frota_evolucao_tipo = (
         frota_evolucao_tipo
         .groupby(['ano', 'combustivel'], as_index=False)
@@ -380,23 +365,55 @@ if agrupar_flex == "Agrupar":
         )
     )
 
-# Gráfico: veículos por tipo de combustível
-fig_evolucao_tipo = px.line(
-    frota_evolucao_tipo,
-    x="ano",
-    y="qtde_veiculos",
-    color='combustivel',
-    markers=True
+# -------------------------------------------------
+# Criar gráfico único combinado
+# -------------------------------------------------
+fig_combinado = go.Figure()
+
+# Adicionar linha do total
+fig_combinado.add_trace(
+    go.Scatter(
+        x=frota_evolucao['ano'],
+        y=frota_evolucao['qtde_veiculos'],
+        mode='lines+markers',
+        name='Total',
+        line=dict(width=3),
+        marker=dict(size=10)
+    )
 )
 
-fig_evolucao_tipo.update_layout(
-    title='Veículos por Ano e Tipo de Combustível<br><sup>veículos únicos abastecidos durante o ano</sup>',
+# Adicionar linhas por tipo de combustível
+for combustivel in frota_evolucao_tipo['combustivel'].unique():
+    dados_combustivel = frota_evolucao_tipo[frota_evolucao_tipo['combustivel'] == combustivel]
+    fig_combinado.add_trace(
+        go.Scatter(
+            x=dados_combustivel['ano'],
+            y=dados_combustivel['qtde_veiculos'],
+            mode='lines+markers',
+            name=combustivel,
+            line=dict(width=2),
+            marker=dict(size=8)
+        )
+    )
+
+# Atualizar layout
+fig_combinado.update_layout(
+    title='Evolução da Frota de Veículos<br><sup>veículos únicos abastecidos durante o ano</sup>',
     xaxis_title='Ano',
     yaxis_title='Quantidade de Veículos',
+    height=500,
+    showlegend=True,
+    hovermode='x unified',
+    legend=dict(
+        orientation="v",
+        yanchor="top",
+        y=1,
+        xanchor="left",
+        x=1.02
+    )
 )
 
-st.plotly_chart(fig_evolucao_tipo, use_container_width=True)
-
+st.plotly_chart(fig_combinado, use_container_width=True)
 
 st.info("Veiculos únicos abastecidos durante o ano. Se um veículo foi abastecido em mais de um ano, ele será contado em cada ano correspondente.")
 
