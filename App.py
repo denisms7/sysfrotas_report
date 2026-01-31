@@ -20,8 +20,9 @@ st.set_page_config(
 st.title("⛽ Combustível utilizado")
 
 
+
 # -------------------------------------------------
-# Filtrar período
+# Filtrar período 💰
 # -------------------------------------------------
 st.sidebar.subheader("🎯 Filtros", divider=True)
 
@@ -40,8 +41,11 @@ df = df.loc[
     (df["ano"] >= ano_inicio) & (df["ano"] <= ano_fim)
 ].copy()  # Adicione .copy() aqui
 
-st.subheader(f"Fonte de dados SysFrotas: {ano_min} a {ano_max}")
 
+
+
+st.subheader(f"Fonte de dados SysFrotas: {ano_min} a {ano_max}")
+st.markdown(f"Registros: {len(df):.0f}")
 
 opcao_coluna = st.sidebar.segmented_control(
     "Tipo de Visualização",
@@ -92,7 +96,7 @@ if opcao_gasolina == "Agrupar":
 
 
 # -------------------------------------------------
-# Valor gasto Reais e Litros
+# Valor gasto GLOBAL
 # -------------------------------------------------
 opcao_geral = st.segmented_control(
     "Visualização",
@@ -156,19 +160,20 @@ st.plotly_chart(fig, use_container_width=True)
 
 
 
-# -------------------------------------------------
+# --------------------------------------------------------------------------------------------------
 # Valor / Quantidade por Secretaria
-# -------------------------------------------------
+# --------------------------------------------------------------------------------------------------
 total_anual_secretaria = (
     df
     .groupby([coluna_geral, 'secretaria'], as_index=False)
     .agg(valor=('valor_total', 'sum'))
 )
 
+
 fig_secretaria = px.line(
     total_anual_secretaria,
     x=coluna_geral,
-    y=eixo_y,
+    y="valor",
     color='secretaria',
     markers=True,
     title='Evolução Mensal por Secretaria (Valor Total)'
@@ -199,6 +204,32 @@ fig_secretaria_pizza.update_layout(
 
 st.plotly_chart(fig_secretaria, width="stretch")
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # -------------------------------------------------
 # Total Geral por Secretaria (Gráfico Agrupado)
 # -------------------------------------------------
@@ -214,21 +245,44 @@ total_por_secretaria = total_por_secretaria.sort_values(
     ascending=False
 )
 
-fig_secretaria_pizza = px.bar(
+fig_secretaria = px.bar(
     total_por_secretaria,
     x='secretaria',
-    y=eixo_y,
+    y='valor',
     text_auto='.2s',
     title='Total Geral por Secretaria',
     subtitle=f"Periodo: {ano_min} - {ano_max}",
 )
 
-fig_secretaria_pizza.update_layout(
+fig_secretaria.update_layout(
     xaxis_title='Secretaria',
     yaxis_title=titulo_y,
 )
 
-st.plotly_chart(fig_secretaria_pizza, use_container_width=True)
+
+
+fig_pizza = px.pie(
+    total_por_secretaria,
+    values='valor',
+    names='secretaria',
+    title='Total Geral por Secretaria',
+    subtitle=f"Periodo: {ano_min} - {ano_max}",
+)
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.plotly_chart(fig_secretaria, use_container_width=True)
+with col2:
+    st.plotly_chart(fig_pizza, use_container_width=True)
+
+
+
+
+
+
+
+
 
 
 
@@ -241,15 +295,24 @@ fig_litro = px.scatter(
     x='data_hora',
     y='valor_unitario',
     color='combustivel_tipo',
-    title='Valor do combustivel por unidade'
+    title='Valor do combustivel por Requisição',
 )
 
 fig_litro.update_layout(
     xaxis_title='Data Hora',
-    yaxis_title='Valor por Litro'
+    yaxis_title='Valor por Litro (R$)'
 )
 
 st.plotly_chart(fig_litro, width="stretch")
+
+
+
+
+
+
+
+
+
 
 
 # -------------------------------------------------
@@ -272,28 +335,68 @@ fig_evolucao = px.line(
     markers=True
 )
 
-# Linha de custo (segundo eixo)
-fig_evolucao.add_scatter(
-    x=frota_evolucao['ano'],
-    y=frota_evolucao['valor_total'],
-    mode='lines+markers',
-    name='Valor Total (R$)',
-    yaxis='y2'
-)
-
 fig_evolucao.update_layout(
     title='Veículos por Ano<br><sup>veículos únicos abastecidos durante o ano</sup>',
     xaxis_title='Ano',
-    yaxis=dict(
-        title='Quantidade de Veículos'
-    ),
-    yaxis2=dict(
-        title='Valor Total (R$)',
-        overlaying='y',
-        side='right',
-        tickformat=',.0f'
-    ),
-    legend_title_text=''
+    yaxis_title='Quantidade de Veículos',
 )
 
 st.plotly_chart(fig_evolucao, use_container_width=True)
+
+
+# -------------------------------------------------
+# Veículos por ano E tipo de combustível
+# -------------------------------------------------
+agrupar_flex = st.segmented_control(
+    "Agrupar Flex e Gasolina",
+    options=["Separar", "Agrupar"],
+    default="Separar",
+)
+
+frota_evolucao_tipo = (
+    df
+    .groupby(['ano', 'combustivel'], as_index=False)
+    .agg(
+        qtde_veiculos=('nome_veiculo', 'nunique'),
+        valor_total=('valor_total', 'sum')
+    )
+)
+
+if agrupar_flex == "Agrupar":
+    frota_evolucao_tipo['combustivel'] = frota_evolucao_tipo['combustivel'].replace(
+        {
+            "06 - Flex e semelhantes": "FLEX AGRUPADA",
+            "02 - Gasolina": "FLEX AGRUPADA",
+        }
+    )
+    
+    # Reagrupar após a substituição para consolidar as linhas
+    frota_evolucao_tipo = (
+        frota_evolucao_tipo
+        .groupby(['ano', 'combustivel'], as_index=False)
+        .agg(
+            qtde_veiculos=('qtde_veiculos', 'sum'),
+            valor_total=('valor_total', 'sum')
+        )
+    )
+
+# Gráfico: veículos por tipo de combustível
+fig_evolucao_tipo = px.line(
+    frota_evolucao_tipo,
+    x="ano",
+    y="qtde_veiculos",
+    color='combustivel',
+    markers=True
+)
+
+fig_evolucao_tipo.update_layout(
+    title='Veículos por Ano e Tipo de Combustível<br><sup>veículos únicos abastecidos durante o ano</sup>',
+    xaxis_title='Ano',
+    yaxis_title='Quantidade de Veículos',
+)
+
+st.plotly_chart(fig_evolucao_tipo, use_container_width=True)
+
+
+st.info("Veiculos únicos abastecidos durante o ano. Se um veículo foi abastecido em mais de um ano, ele será contado em cada ano correspondente.")
+
