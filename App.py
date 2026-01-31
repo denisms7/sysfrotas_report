@@ -45,10 +45,55 @@ df = df.loc[
 ].copy()  # Adicione .copy() aqui
 
 
-
-
 st.subheader(f"Fonte de dados SysFrotas: {ano_min} a {ano_max}")
-st.markdown(f"Registros: {len(df):.0f}")
+
+st.markdown(
+    f"""
+    **Registros:** {len(df):.0f}<br>
+    **Registros com valor total zero:** {len(df[df['valor_total'] == 0]):.0f}
+    """,
+    unsafe_allow_html=True,
+)
+
+
+col1, col2, col3, col4 = st.columns(4)
+
+df_abastecimentos = df[df['valor_total'] > 0]
+
+media_litros = df_abastecimentos['quantidade'].mean()
+
+moda_series = df_abastecimentos['quantidade'].mode()
+moda_litros = moda_series.iloc[0] if not moda_series.empty else 0
+
+max_litros = df_abastecimentos['quantidade'].max()
+min_litros = df_abastecimentos['quantidade'].min()
+
+col1.metric(
+    "Média de litros por requisição",
+    f"{media_litros:.2f} L",
+)
+
+col2.metric(
+    "Moda de litros por requisição",
+    f"{moda_litros:.2f} L",
+)
+
+col3.metric(
+    "Abastecimento máximo",
+    f"{max_litros:.2f} L",
+)
+
+col4.metric(
+    "Abastecimento mínimo",
+    f"{min_litros:.2f} L",
+)
+
+
+
+
+
+
+
 
 opcao_coluna = st.sidebar.segmented_control(
     "Tipo de Visualização",
