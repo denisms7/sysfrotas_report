@@ -370,8 +370,7 @@ frota_evolucao = (
     df
     .groupby('ano', as_index=False)
     .agg(
-        qtde_veiculos=('codigo_veiculo', 'nunique'),
-        valor_total=('valor_total', 'sum')
+        qtde_veiculos=('codigo_veiculo', 'nunique')
     )
 )
 
@@ -388,8 +387,7 @@ frota_evolucao_tipo = (
     df
     .groupby(['ano', 'combustivel'], as_index=False)
     .agg(
-        qtde_veiculos=('codigo_veiculo', 'nunique'),
-        valor_total=('valor_total', 'sum')
+        qtde_veiculos=('codigo_veiculo', 'nunique')
     )
 )
 
@@ -405,8 +403,7 @@ if agrupar_flex == "Agrupar":
         frota_evolucao_tipo
         .groupby(['ano', 'combustivel'], as_index=False)
         .agg(
-            qtde_veiculos=('qtde_veiculos', 'sum'),
-            valor_total=('valor_total', 'sum')
+            qtde_veiculos=('qtde_veiculos', 'sum')
         )
     )
 
