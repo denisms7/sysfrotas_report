@@ -61,6 +61,13 @@ req_inicio, req_fim = st.slider(
 df_req = df.loc[(df["quantidade"] >= req_inicio) & (df["quantidade"] <= req_fim)]
 
 
+st.markdown(
+    f"**Requisições no período:** {len(df_req)}",
+    unsafe_allow_html=True,
+)
+
+
+
 df_req = df_req[["codigo_abastecimento", "data_hora", "codigo_veiculo", "nome_veiculo", "placa", "combustivel_tipo", "quantidade", "valor_total"]]
 
 colunas_exibicao = {
