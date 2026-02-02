@@ -202,8 +202,3 @@ st.markdown(
     f"**🚗 Veículos no período:** {len(id_veiculos)}",
     unsafe_allow_html=True,
 )
-
-
-
-
-df[df["codigo_veiculo"] == 19]
