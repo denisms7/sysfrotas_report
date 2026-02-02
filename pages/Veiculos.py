@@ -2,113 +2,52 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from data.data import data
-from plotly.subplots import make_subplots
-import plotly.graph_objects as go
-
-
-st.cache_data.clear()
-
-df = data()
-
-
-# -------------------------------------------------
-# Filtrar período 💰
-# -------------------------------------------------
-st.sidebar.subheader("🎯 Filtros", divider=True)
-
-ano_min = int(df["ano"].min())
-ano_max = int(df["ano"].max())
-
-ano_inicio, ano_fim = st.sidebar.slider(
-    "Selecione o intervalo de anos",
-    min_value=ano_min,
-    max_value=ano_max,
-    value=(ano_min, 2025),
-    step=1,
-)
-
-df = df.loc[
-    (df["ano"] >= ano_inicio) & (df["ano"] <= ano_fim)
-].copy()  # Adicione .copy() aqui
-
-
 
 # -------------------------------------------------
 # Configuração da página
 # -------------------------------------------------
 st.set_page_config(
-    page_title="Veiculos - Combustível utilizado",
+    page_title="Combustível utilizado (Litros)",
     page_icon="⛽",
-    layout="wide"
+    layout="wide",
 )
 
-st.title("⛽ Veiculos - Combustível utilizado")
+st.title("⛽ Combustível utilizado (Litros)")
 
+# -------------------------------------------------
+# Carregamento dos dados
+# -------------------------------------------------
+st.cache_data.clear()
+df_bruto = data()
 
-id_veiculos = sorted(df["codigo_veiculo"].unique())
+# -------------------------------------------------
+# Filtros laterais
+# -------------------------------------------------
+st.sidebar.subheader("🎯 Filtros", divider=True)
 
-veiculo_selecionado = st.select_slider(
-    "Selecione o ID do Veículo:",
-    options=id_veiculos,
+ano_min = int(df_bruto["ano"].min())
+ano_max = int(df_bruto["ano"].max())
+
+ano_inicio, ano_fim = st.sidebar.slider(
+    "Selecione o intervalo de anos",
+    min_value=ano_min,
+    max_value=ano_max,
+    value=(ano_min, ano_max),
+    step=1,
 )
 
-st.markdown(
-    f"""
-    **🚗 Veículos:** {len(id_veiculos):.0f}
-    """,
-    unsafe_allow_html=True,
-)
+df = df_bruto.loc[
+    (df_bruto["ano"] >= ano_inicio) &
+    (df_bruto["ano"] <= ano_fim)
+].copy()
 
-total_mensal_veiculo = (
-    df
-    .groupby(
-        ["codigo_veiculo", "nome_veiculo", "placa", "ano_mes"],
-        as_index=False,
-    )
-    .agg(
-        quantidade=("quantidade", "sum"),
-        valor_total=("valor_total", "sum"),
-    )
-)
-
-
-
-df_linhas = total_mensal_veiculo[
-    total_mensal_veiculo['codigo_veiculo'] == veiculo_selecionado
-]
-
-titulo = (
-    f"{df_linhas['codigo_veiculo'].iloc[0]} - "
-    f"{df_linhas['nome_veiculo'].iloc[0]}"
-    f"{df_linhas['placa'].iloc[0]}"
-)
-
-titulo_2 = (
-    f"{df_linhas['placa'].iloc[0]}"
-)
-
-fig = px.line(
-    df_linhas,
-    x="ano_mes",
-    y="quantidade",
-    title=titulo,
-    subtitle=f"Placa: {titulo_2}",
-    )
-
-
-
-st.plotly_chart(fig, use_container_width=True)
-
-
-
-
+# -------------------------------------------------
+# Estatísticas por veículo
+# -------------------------------------------------
 estatisticas_veiculo = (
     df
     .groupby(
-        [
-            "codigo_veiculo",
-            "nome_veiculo",
-        ],
+        ["codigo_veiculo", "nome_veiculo"],
         as_index=False,
     )
     .agg(
@@ -121,24 +60,10 @@ estatisticas_veiculo = (
     )
 )
 
-estatisticas_veiculo['cv'] = (
-    estatisticas_veiculo['desvio_padrao'] /
-    estatisticas_veiculo['media']
+estatisticas_veiculo["cv"] = (
+    estatisticas_veiculo["desvio_padrao"] /
+    estatisticas_veiculo["media"]
 )
-
-opcao_coluna = st.segmented_control(
-    "Visualização",
-    options=["Todos","Anomalias",],
-    default="Todos",
-)
-
-if opcao_coluna == "Anomalias":
-    estatisticas_veiculo = estatisticas_veiculo[
-        estatisticas_veiculo['cv'] > 0.5
-    ]
-else:
-    estatisticas_veiculo = estatisticas_veiculo
-
 
 def classificar_cv(cv: float) -> str:
     if cv >= 0.5:
@@ -149,8 +74,136 @@ def classificar_cv(cv: float) -> str:
         return "🟡 Atenção"
     return "🟢 Normal"
 
-estatisticas_veiculo['nivel_risco'] = estatisticas_veiculo['cv'].apply(classificar_cv)
+estatisticas_veiculo["nivel_risco"] = (
+    estatisticas_veiculo["cv"]
+    .fillna(0)
+    .apply(classificar_cv)
+)
 
-st.dataframe(estatisticas_veiculo, use_container_width=True)
+# -------------------------------------------------
+# Filtro por nível de risco
+# -------------------------------------------------
+opcao_coluna = st.segmented_control(
+    "Filtro por Nível de Risco",
+    options=[
+        "Todos",
+        "🔴 Crítico",
+        "🟠 Alto",
+        "🟡 Atenção",
+        "🟢 Normal",
+    ],
+    default="Todos",
+)
 
-xx = df[df['ano'] < 2030]["codigo_veiculo"].nunique()
+if opcao_coluna != "Todos":
+    estatisticas_veiculo = estatisticas_veiculo[
+        estatisticas_veiculo["nivel_risco"] == opcao_coluna
+    ]
+
+# -------------------------------------------------
+# DataFrame clicável
+# -------------------------------------------------
+selecao = st.dataframe(
+    estatisticas_veiculo,
+    use_container_width=True,
+    selection_mode="single-row",
+    on_select="rerun",
+    key="tabela_veiculos",
+)
+
+# -------------------------------------------------
+# Dados agregados para gráficos
+# -------------------------------------------------
+df_agrupado = (
+    df
+    .groupby(
+        ["codigo_veiculo", "nome_veiculo", "ano_mes"],
+        as_index=False,
+    )
+    .agg(
+        quantidade=("quantidade", "sum"),
+        valor_total=("valor_total", "sum"),
+    )
+)
+
+# -------------------------------------------------
+# Gráfico baseado no clique da tabela
+# -------------------------------------------------
+if selecao.selection.rows:
+    idx = selecao.selection.rows[0]
+
+    if idx >= len(estatisticas_veiculo):
+        st.warning("Seleção desatualizada. Selecione novamente.")
+        st.stop()
+
+    linha = estatisticas_veiculo.iloc[idx]
+    codigo_veiculo = linha["codigo_veiculo"]
+
+    df_filtrado = df_agrupado[
+        df_agrupado["codigo_veiculo"] == codigo_veiculo
+    ]
+
+    st.subheader(
+        f"{linha['codigo_veiculo']} - {linha['nome_veiculo']}"
+    )
+
+    if df_filtrado.empty:
+        st.warning(
+            "Este veículo não possui dados no período selecionado."
+        )
+    else:
+        fig = px.line(
+            df_filtrado,
+            x="ano_mes",
+            y="quantidade",
+            title="Evolução mensal do consumo",
+            markers=True,
+        )
+        st.plotly_chart(fig, use_container_width=True)
+else:
+    st.info("Selecione um veículo na tabela para visualizar o gráfico.")
+
+# -------------------------------------------------
+# Seletor alternativo por ID (seguro)
+# -------------------------------------------------
+st.divider()
+
+id_veiculos = sorted(df["codigo_veiculo"].unique())
+
+veiculo_selecionado = st.select_slider(
+    "Selecione o ID do Veículo",
+    options=id_veiculos,
+)
+
+df_filtrado2 = df_agrupado[
+    df_agrupado["codigo_veiculo"] == veiculo_selecionado
+]
+
+if df_filtrado2.empty:
+    st.warning(
+        "Este veículo não possui dados no período selecionado."
+    )
+else:
+    nome_veiculo = df_filtrado2["nome_veiculo"].iloc[0]
+
+    fig2 = px.line(
+        df_filtrado2,
+        x="ano_mes",
+        y="quantidade",
+        title=f"Consumo do veículo {nome_veiculo}",
+        markers=True,
+    )
+    st.plotly_chart(fig2, use_container_width=True)
+
+# -------------------------------------------------
+# Rodapé
+# -------------------------------------------------
+st.markdown(
+    f"**🚗 Veículos no período:** {len(id_veiculos)}",
+    unsafe_allow_html=True,
+)
+
+
+
+
+df[df["codigo_veiculo"] == 19]
