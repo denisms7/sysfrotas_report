@@ -61,3 +61,10 @@ def data():
     df = df[df['ano'] < 2026]
 
     return df
+
+
+def centros():
+    base_dir = Path(__file__).resolve().parent
+    csv_path_secretaria = base_dir / 'centro_de_custos.csv'
+    df_secretaria = pd.read_csv(csv_path_secretaria, sep='\t')
+    return df_secretaria
