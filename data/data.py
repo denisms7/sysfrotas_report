@@ -51,7 +51,6 @@ def data():
         df['mes'].astype(str).str.zfill(2)
     )
 
-
     df = df.merge(
         df_secretaria[['centro_de_custos', 'secretaria']],
         on='centro_de_custos',
