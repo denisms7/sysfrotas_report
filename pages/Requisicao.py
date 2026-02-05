@@ -68,9 +68,10 @@ st.markdown(
 
 
 
-df_req = df_req[["codigo_abastecimento", "data_hora", "codigo_veiculo", "nome_veiculo", "placa", "combustivel_tipo", "quantidade", "valor_total"]]
+df_req = df_req[["documento_fiscal", "codigo_abastecimento", "data_hora", "codigo_veiculo", "nome_veiculo", "placa", "combustivel_tipo", "quantidade", "valor_total"]]
 
 colunas_exibicao = {
+    "documento_fiscal": "Documento Fiscal",
     "codigo_abastecimento": "Código Requisição",
     "data_hora": "Data/Hora",
     "codigo_veiculo": "ID Veículo",
@@ -84,6 +85,7 @@ colunas_exibicao = {
 df_req_exibicao = (
     df_req[
         [
+            "documento_fiscal",
             "codigo_abastecimento",
             "data_hora",
             "codigo_veiculo",
