@@ -1,6 +1,8 @@
 import streamlit as st
 
 
+st.logo('img/logopm.png', size="large")
+
 pages = {
     "Requisições de Abastecimentos": [
         st.Page("pages/Geral.py", title="Combustível Utilizado"),
