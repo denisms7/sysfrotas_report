@@ -1,8 +1,5 @@
 import streamlit as st
-from data.data import centros
-
-
-df_secretaria = centros()
+from data.data import load_data_centros
 
 
 # -------------------------------------------------
@@ -16,7 +13,15 @@ st.set_page_config(
 
 st.title("⛽ Centro de custo")
 
-df_secretaria = df_secretaria.rename(
+
+# -------------------------------------------------
+# Carregamento dos dados
+# -------------------------------------------------
+with st.spinner("Carregando dados..."):
+    df = load_data_centros()
+
+
+df_secretaria = df.rename(
     columns={
         "centro_de_custos": "Centro de Custo",
         "secretaria": "Secretaria",
@@ -25,5 +30,5 @@ df_secretaria = df_secretaria.rename(
 
 st.dataframe(
     df_secretaria,
-    use_container_width=True,
+    width='stretch',
 )

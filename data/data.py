@@ -1,12 +1,13 @@
 from pathlib import Path
 import pandas as pd
+import streamlit as st
 
 
 base_dir = Path(__file__).resolve().parent
 csv_path = base_dir / 'Abastecimentos _01012015.csv'
 csv_path_secretaria = base_dir / 'centro_de_custos.csv'
 
-def data():
+def data_req():
 
     df = pd.read_csv(csv_path, sep=';')
     df_secretaria = pd.read_csv(csv_path_secretaria, sep='\t')
@@ -62,8 +63,21 @@ def data():
     return df
 
 
-def centros():
+def data_centros():
     base_dir = Path(__file__).resolve().parent
     csv_path_secretaria = base_dir / 'centro_de_custos.csv'
     df_secretaria = pd.read_csv(csv_path_secretaria, sep='\t')
     return df_secretaria
+
+
+
+@st.cache_data
+def load_data_req():
+    df = data_req()
+    return df
+
+
+@st.cache_data
+def load_data_centros():
+    df = data_centros()
+    return df

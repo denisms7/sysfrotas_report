@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from data.data import data
+from data.data import load_data_req
 
 # -------------------------------------------------
 # Configuração da página
@@ -17,16 +17,17 @@ st.title("⛽ Combustível utilizado (Litros)")
 # -------------------------------------------------
 # Carregamento dos dados
 # -------------------------------------------------
-st.cache_data.clear()
-df_bruto = data()
+with st.spinner("Carregando dados..."):
+    df = load_data_req()
+
 
 # -------------------------------------------------
 # Filtros laterais
 # -------------------------------------------------
 st.sidebar.subheader("🎯 Filtros", divider=True)
 
-ano_min = int(df_bruto["ano"].min())
-ano_max = int(df_bruto["ano"].max())
+ano_min = int(df["ano"].min())
+ano_max = int(df["ano"].max())
 
 ano_inicio, ano_fim = st.sidebar.slider(
     "Selecione o intervalo de anos",
@@ -36,9 +37,9 @@ ano_inicio, ano_fim = st.sidebar.slider(
     step=1,
 )
 
-df = df_bruto.loc[
-    (df_bruto["ano"] >= ano_inicio) &
-    (df_bruto["ano"] <= ano_fim)
+df = df.loc[
+    (df["ano"] >= ano_inicio) &
+    (df["ano"] <= ano_fim)
 ].copy()
 
 # -------------------------------------------------
@@ -105,7 +106,7 @@ if opcao_coluna != "Todos":
 # -------------------------------------------------
 selecao = st.dataframe(
     estatisticas_veiculo,
-    use_container_width=True,
+    width='stretch',
     selection_mode="single-row",
     on_select="rerun",
     key="tabela_veiculos",
@@ -159,7 +160,7 @@ if selecao.selection.rows:
             title="Evolução mensal do consumo",
             markers=True,
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 else:
     st.info("Selecione um veículo na tabela para visualizar o gráfico.")
 
@@ -193,7 +194,7 @@ else:
         title=f"Consumo do veículo {nome_veiculo}",
         markers=True,
     )
-    st.plotly_chart(fig2, use_container_width=True)
+    st.plotly_chart(fig2, width='stretch')
 
 # -------------------------------------------------
 # Rodapé
