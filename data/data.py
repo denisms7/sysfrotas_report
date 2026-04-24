@@ -4,7 +4,7 @@ import streamlit as st
 
 
 base_dir = Path(__file__).resolve().parent
-csv_path = base_dir / 'Abastecimentos _01012015.csv'
+csv_path = base_dir / 'abastecimentos_desde_2015.csv'
 csv_path_secretaria = base_dir / 'centro_de_custos.csv'
 
 def data_req():
@@ -57,8 +57,6 @@ def data_req():
         on='centro_de_custos',
         how='left'
     )
-
-    df = df[df['ano'] < 2026]
 
     return df
 
