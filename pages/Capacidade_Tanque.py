@@ -36,7 +36,7 @@ anos = sorted(df["ano"].dropna().unique())
 ano_inicio, ano_fim = st.sidebar.select_slider(
     "Intervalo de anos",
     options=anos,
-    value=(int(df["ano"].min()), int(df["ano"].max())),
+    value=(2024, int(df["ano"].max())),
 )
 
 tolerancia = st.sidebar.slider(

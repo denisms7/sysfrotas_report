@@ -37,10 +37,11 @@ if len(meses_disponiveis) < 2:
     st.warning("Dados insuficientes para comparacao. Sao necessarios pelo menos 2 meses de registros.")
     st.stop()
 
+_opcoes_mes = meses_disponiveis[1:]
 mes_selecionado = st.sidebar.selectbox(
     "Mes de referencia",
-    options=meses_disponiveis[1:],
-    index=len(meses_disponiveis) - 2,
+    options=_opcoes_mes,
+    index=len(_opcoes_mes) - 1,
     help="Mes cujo consumo sera analisado.",
 )
 

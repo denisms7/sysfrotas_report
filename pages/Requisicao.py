@@ -31,7 +31,7 @@ ano_inicio, ano_fim = st.sidebar.slider(
     "Intervalo de anos",
     min_value=ano_min,
     max_value=ano_max,
-    value=(ano_min, ano_max),
+    value=(2024, ano_max),
     step=1,
 )
 
