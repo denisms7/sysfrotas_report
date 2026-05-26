@@ -1,6 +1,6 @@
 import streamlit as st
 import plotly.express as px
-from data.data import load_data_req
+from data.data import load_data_req, load_data_centros
 import plotly.graph_objects as go
 
 
@@ -22,6 +22,7 @@ st.title("⛽ Combustível utilizado")
 # -------------------------------------------------
 with st.spinner("Carregando dados..."):
     df = load_data_req()
+    df_centros = load_data_centros()
 
 
 # -------------------------------------------------
@@ -36,7 +37,7 @@ ano_inicio, ano_fim = st.sidebar.slider(
     "Selecione o intervalo de anos",
     min_value=ano_min,
     max_value=ano_max,
-    value=(2020, ano_max),
+    value=(2024, ano_max),
     step=1,
 )
 
@@ -443,3 +444,16 @@ st.plotly_chart(fig_combinado, width='stretch')
 
 st.info("Veiculos únicos abastecidos durante o ano. Se um veículo foi abastecido em mais de um ano, ele será contado em cada ano correspondente.")
 
+
+st.subheader("⛽ Centro de custo", divider=True)
+df_secretaria = df_centros.rename(
+    columns={
+        "centro_de_custos": "Centro de Custo",
+        "secretaria": "Secretaria",
+    }
+)
+
+st.dataframe(
+    df_secretaria,
+    width='stretch',
+)
