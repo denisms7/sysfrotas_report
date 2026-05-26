@@ -1,6 +1,4 @@
 import streamlit as st
-import pandas as pd
-import plotly.express as px
 from data.data import load_data_req
 
 # -------------------------------------------------
@@ -53,7 +51,7 @@ req_inicio, req_fim = st.slider(
     "Selecione os Litros",
     min_value=req_min,
     max_value=req_max,
-    value=(600, req_max),
+    value=(req_min, req_max),
     step=10,
 )
 

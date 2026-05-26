@@ -1,8 +1,6 @@
 import streamlit as st
-import pandas as pd
 import plotly.express as px
 from data.data import load_data_req
-from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 
 
@@ -236,22 +234,6 @@ fig_secretaria.update_layout(
 )
 
 
-fig_secretaria_pizza = px.line(
-    total_anual_secretaria,
-    x=coluna_geral,
-    y=eixo_y,
-    color='secretaria',
-    markers=True,
-    title='Evolução Mensal por Secretaria (Valor Total)'
-)
-
-fig_secretaria_pizza.update_layout(
-    xaxis_title=coluna_geral_nome,
-    yaxis_title=titulo_y,
-    legend_title_text='Secretaria',
-)
-
-
 st.plotly_chart(fig_secretaria, width="stretch")
 
 
@@ -301,7 +283,7 @@ fig_secretaria = px.bar(
     y='valor',
     text_auto='.2s',
     title='Total Geral por Secretaria',
-    subtitle=f"Periodo: {ano_min} - {ano_max}",
+    subtitle=f"Periodo: {ano_inicio} - {ano_fim}",
 )
 
 fig_secretaria.update_layout(
@@ -316,7 +298,7 @@ fig_pizza = px.pie(
     values='valor',
     names='secretaria',
     title='Total Geral por Secretaria',
-    subtitle=f"Periodo: {ano_min} - {ano_max}",
+    subtitle=f"Periodo: {ano_inicio} - {ano_fim}",
 )
 
 col1, col2 = st.columns(2)
